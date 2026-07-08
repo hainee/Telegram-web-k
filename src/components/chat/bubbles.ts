@@ -7445,6 +7445,12 @@ export default class ChatBubbles {
       context.mediaRequiresMessageDiv = true;
     }
 
+    if(context.messageMessage && !bigEmojis && needToSetHTML) {
+      const translationSlot = document.createElement('div');
+      translationSlot.classList.add('message-translation-slot');
+      messageDiv.append(translationSlot);
+    }
+
     const usedId = message.mid;
     if(isMessage && message.pFlags.currentlyTyping || this.currentlyTypingMessages[usedId]) {
       const {wrapContinuouslyTypingMessage} = await import('./bubbleParts/continuouslyTypingMessage');
