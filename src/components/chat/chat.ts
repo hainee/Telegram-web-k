@@ -1231,6 +1231,7 @@ export default class Chat extends EventListenerBase<{
 
     if(this.isMainChat) {
       this.appImManager.dispatchEvent('peer_changed', this);
+      rootScope.dispatchEvent('open_chat', {peerId: this.peerId});
     }
   }
 

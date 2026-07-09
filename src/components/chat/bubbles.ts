@@ -7399,7 +7399,14 @@ export default class ChatBubbles {
     }
 
     if(needToSetHTML) {
-      setInnerHTML(messageDiv, richText);
+      if(context.messageMessage) {
+        const messageTextContainer = document.createElement('div');
+        messageTextContainer.classList.add('message-text-content');
+        setInnerHTML(messageTextContainer, richText);
+        messageDiv.append(messageTextContainer);
+      } else {
+        setInnerHTML(messageDiv, richText);
+      }
 
       const canShowPreviousMessage = ((originalMessage?: Message): originalMessage is Message.message  => {
         if(originalMessage?._ !== 'message' || !originalMessage.message) return false;

@@ -8,7 +8,7 @@
     "start": "vite",
     "start-in-docker": "vite --host",
     "serve": "pnpm run build; node server.js",
-    "build": "pnpm run generate-changelog && vite build",
+    "build": "pnpm run generate-changelog && set NO_MINIFY=true&& set NO_HASH=true&& vite build",
     "test": "vitest",
     "test:lottie": "playwright test",
     "whybundled": "pnpm run profile && whybundled stats.json",

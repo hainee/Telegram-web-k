@@ -96,7 +96,8 @@ const USE_SOLID_SRC = false;
 const SOLID_PATH = USE_SOLID_SRC ? SOLID_SRC_PATH : SOLID_BUILT_PATH;
 const USE_OWN_SOLID = existsSync(resolve(rootDir, SOLID_PATH));
 
-const NO_MINIFY = false;
+const NO_MINIFY = process.env.NO_MINIFY === 'true';
+const NO_HASH = process.env.NO_HASH === 'true';
 const BASIC_SSL_CONFIG: Parameters<typeof basicSsl>[0] = USE_SELF_SIGNED_CERTS ? {
   name: host,
   certDir: certsDir
@@ -199,12 +200,15 @@ export default defineConfig({
     target: 'es2020',
     sourcemap: true,
     assetsDir: '',
-    copyPublicDir: false,
-    emptyOutDir: true,
+    copyPublicDir: true,
+    emptyOutDir: false,
     minify: NO_MINIFY ? false : undefined,
     rollupOptions: {
       output: {
-        sourcemapIgnoreList: serverOptions.sourcemapIgnoreList
+        sourcemapIgnoreList: serverOptions.sourcemapIgnoreList,
+        entryFileNames: NO_HASH ? '[name].js' : undefined,
+        chunkFileNames: NO_HASH ? '[name].js' : undefined,
+        assetFileNames: NO_HASH ? '[name][extname]' : undefined
       }
       // input: {
       //   main: './index.html',

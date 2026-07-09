@@ -52,6 +52,10 @@ export async function selectTarget({
   selectTab,
   onChange
 }: SelectTargetArgs) {
+  if(!target || Number.isNaN(id) || id < 0) {
+    return false;
+  }
+
   if(onClick) {
     const tabContent = content?.children[id] as HTMLDivElement;
     const result1 = onClick(id, tabContent, animate);
@@ -61,7 +65,7 @@ export async function selectTarget({
     }
   }
 
-  if(scrollableX) {
+  if(scrollableX && target.parentElement) {
     const containerEl = scrollableX.container;
     // Skip the scroll round-trip when there's no actual scrolling to do:
     //   - row has no horizontal overflow (every tab is already visible)
@@ -73,9 +77,12 @@ export async function selectTarget({
     const noOverflow = containerEl.scrollWidth <= containerEl.clientWidth;
     const isFirstAndAtStart = id === 0 && containerEl.scrollLeft === 0;
     if(!noOverflow && !isFirstAndAtStart) {
+      const selectedElement = target.parentElement.children[id] as HTMLElement;
+      if(!selectedElement) return false;
+
       fastSmoothScroll({
         container: containerEl,
-        element: target.parentElement.children[id] as HTMLElement,
+        element: selectedElement,
         position: 'center',
         forceDirection: animate ? undefined : FocusDirection.Static,
         forceDuration: transitionTime,
@@ -103,11 +110,12 @@ export async function selectTarget({
   }
 
   // a great stripe from Jolly Cobra
-  if(prevId !== -1 && animate) {
+  if(prevId !== -1 && animate && target.parentElement?.children[prevId]) {
     const selector = '.menu-horizontal-div-item-background';
     mutateCallback(() => {
-      const indicator = target.querySelector(selector)! as HTMLElement;
-      const currentIndicator = target.parentElement.children[prevId].querySelector(selector)! as HTMLElement;
+      const indicator = target.querySelector(selector) as HTMLElement;
+      const currentIndicator = target.parentElement.children[prevId].querySelector(selector) as HTMLElement;
+      if(!indicator || !currentIndicator) return;
 
       currentIndicator.classList.remove('animate');
       indicator.classList.remove('animate');

@@ -50,6 +50,7 @@ export type BroadcastEvents = {
   'peer_title_edit': {peerId: PeerId, threadId?: number},
   'peer_deleted': PeerId, // left chat, deleted user dialog, left channel
   'peer_full_update': PeerId,
+  'open_chat': {peerId: PeerId},
   'peer_settings': {peerId: PeerId, settings: PeerSettings},
   'peer_stories': {peerId: PeerId, available: boolean},
   'peer_stories_hidden': {peerId: PeerId, hidden: boolean},
