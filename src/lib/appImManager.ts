@@ -1500,7 +1500,7 @@ export class AppImManager extends EventListenerBase<{
                 });
               }
             } else {
-              chat.input.initMessageEditing(message.mid);
+              void chat.input.initMessageEditing(message.mid);
             }
           });
         }

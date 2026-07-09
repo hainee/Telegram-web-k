@@ -1743,7 +1743,7 @@ export default class ChatContextMenu {
       return;
     }
 
-    this.chat.input.initMessageEditing(this.isTargetAGroupedItem ? this.mid : message.mid);
+    void this.chat.input.initMessageEditing(this.isTargetAGroupedItem ? this.mid : message.mid);
   };
 
   private onEditFactCheckClick = async() => {

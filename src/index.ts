@@ -32,7 +32,7 @@ import singleInstance, {InstanceDeactivateReason} from '@lib/singleInstance';
 import {parseUriParamsLine} from '@helpers/string/parseUriParams';
 import Modes from '@config/modes';
 import {AuthState} from '@types';
-import DEBUG, {IS_BETA} from '@config/debug';
+import DEBUG, {IS_BETA, MOUNT_CLASS_TO} from '@config/debug';
 import IS_INSTALL_PROMPT_SUPPORTED from '@environment/installPrompt';
 import cacheInstallPrompt from '@helpers/dom/installPrompt';
 import {fillLocalizedDates} from '@helpers/date';
@@ -399,6 +399,13 @@ function setDocumentLangPackProperties(langPack: LangPackDifference.langPackDiff
   }
 }
 
+function wrapTelegramKSDKActions() {
+  const appMessagesManager = rootScope.managers.appMessagesManager;
+  appMessagesManager.sendText = rootScope.wrapAction('sendText', appMessagesManager.sendText);
+  appMessagesManager.sendFile = rootScope.wrapAction('sendFile', appMessagesManager.sendFile);
+  appMessagesManager.editMessage = rootScope.wrapAction('editMessage', appMessagesManager.editMessage);
+}
+
 (window as any)['showIconLibrary'] = async() => {
   const {showIconLibrary} = await import('./components/iconLibrary/trigger');
   showIconLibrary();
@@ -411,6 +418,14 @@ function setDocumentLangPackProperties(langPack: LangPackDifference.langPackDiff
   toggleAttributePolyfill();
   replaceChildrenPolyfill();
   rootScope.managers = getProxiedManagers();
+  wrapTelegramKSDKActions();
+  MOUNT_CLASS_TO.telegramKSDKRuntime = {
+    rootScope,
+    managers: rootScope.managers,
+    get appImManager() {
+      return MOUNT_CLASS_TO.appImManager;
+    }
+  };
   setManifest();
   setViewportHeightListeners();
   setWorkerProxy; // * just to import

@@ -86,6 +86,7 @@ export type BroadcastEvents = {
   // 'history_request': void,
 
   'message_edit': {storageKey: MessagesStorageKey, peerId: PeerId, mid: number, message: MyMessage},
+  'message_editing': {peerId: PeerId, mid: number, message: Message.message, text: string},
   'message_sent': {storageKey: MessagesStorageKey, tempId: number, tempMessage: any, mid: number, message: MyMessage},
   'message_error': {storageKey: MessagesStorageKey, peerId: PeerId, tempId: number, error: ApiError},
   'message_transcribed': {peerId: PeerId, mid: number, text: string, pending?: boolean},
@@ -247,11 +248,14 @@ export type BroadcastEventsListeners = {
   [name in keyof BroadcastEvents]: (e: BroadcastEvents[name]) => void
 };
 
+type TelegramKSDKAction = (this: unknown, ...args: any[]) => any;
+
 export class RootScope extends EventListenerBase<BroadcastEventsListeners> {
   public myId: PeerId;
   private connectionStatus: {[name: string]: ConnectionStatusChange};
   public managers: AppManagers;
   public premium: boolean;
+  public actions: Record<string, TelegramKSDKAction>;
 
   constructor() {
     super();
@@ -259,6 +263,7 @@ export class RootScope extends EventListenerBase<BroadcastEventsListeners> {
     this.myId = NULL_PEER_ID;
     this.connectionStatus = {};
     this.premium = false;
+    this.actions = {};
 
     this.addEventListener('user_auth', ({id}) => {
       this.myId = id.toPeerId();
@@ -298,6 +303,24 @@ export class RootScope extends EventListenerBase<BroadcastEventsListeners> {
 
   public getMyId() {
     return this.myId;
+  }
+
+  public wrapAction<T extends TelegramKSDKAction>(actionName: string, originAction: T): T {
+    const actions = this.actions;
+    const originalActionName = `${actionName}Original`;
+    actions[originalActionName] = originAction;
+    actions[actionName] = originAction;
+
+    function wrap(this: unknown, ...args: Parameters<T>): ReturnType<T> {
+      const fn = actions[actionName] as T;
+      if(!fn) {
+        return originAction.apply(this, args);
+      }
+
+      return fn.apply(this, args);
+    }
+
+    return Object.assign(wrap, originAction) as T;
   }
 
   public dispatchEventSingle<L extends EventListenerListeners = BroadcastEventsListeners, T extends keyof L = keyof L>(

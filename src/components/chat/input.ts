@@ -4381,10 +4381,17 @@ export default class ChatInput {
     return true;
   } */
 
-  public initMessageEditing(mid: number) {
+  public async initMessageEditing(mid: number) {
     const message = this.chat.getMessage(mid) as Message.message;
+    const editingEvent = {
+      peerId: this.chat.peerId,
+      mid,
+      message,
+      text: message.message
+    };
+    await Promise.all(rootScope.dispatchResultableEvent('message_editing', editingEvent));
 
-    let input = wrapDraftText(message.message, {entities: message.totalEntities, wrappingForPeerId: this.chat.peerId});
+    let input = wrapDraftText(editingEvent.text, {entities: message.totalEntities, wrappingForPeerId: this.chat.peerId});
     const f = async() => {
       let restoreInputLock: () => void;
       if(!this.messageInput.isContentEditable) {
