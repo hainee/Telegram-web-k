@@ -109,6 +109,16 @@ function createProxy(
           args: clonedArgs,
           accountNumber
         }, ack as any);
+        const params = args[0];
+        if(params?.returnTempId && (p === 'sendText' || p === 'sendFile')) {
+          promise.then((result: number | {tempId?: number}) => {
+            params.tempId = typeof(result) === 'number' ? result : result?.tempId;
+          });
+        } else if(params?.returnTempIds && p === 'sendGrouped') {
+          promise.then((tempIds: number[]) => {
+            params.tempIds = tempIds;
+          });
+        }
 
         if(DEBUG) {
           if(DEBUG_MANAGER_REQUESTS[name]?.has(p as any)) {

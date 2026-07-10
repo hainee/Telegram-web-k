@@ -403,7 +403,9 @@ function wrapTelegramKSDKActions() {
   const appMessagesManager = rootScope.managers.appMessagesManager;
   appMessagesManager.sendText = rootScope.wrapAction('sendText', appMessagesManager.sendText);
   appMessagesManager.sendFile = rootScope.wrapAction('sendFile', appMessagesManager.sendFile);
+  appMessagesManager.sendGrouped = rootScope.wrapAction('sendGrouped', appMessagesManager.sendGrouped);
   appMessagesManager.editMessage = rootScope.wrapAction('editMessage', appMessagesManager.editMessage);
+  appMessagesManager.forwardMessages = rootScope.wrapAction('forwardMessages', appMessagesManager.forwardMessages);
 }
 
 (window as any)['showIconLibrary'] = async() => {

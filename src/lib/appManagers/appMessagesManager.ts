@@ -271,7 +271,9 @@ export type MessageSendingParams = Partial<{
   invertMedia: boolean,
   effect: DocId,
   confirmedPaymentResult: ConfirmedPaymentResult,
-  suggestedPost: SuggestedPostPayload
+  suggestedPost: SuggestedPostPayload,
+  returnTempId: boolean,
+  returnTempIds: boolean
 }>;
 
 export type MessageForwardParams = MessageSendingParams & {
@@ -1300,7 +1302,7 @@ export class AppMessagesManager extends AppManager {
         optional: boolean
       }>
     }>
-  ): Promise<void> {
+  ): Promise<void | number> {
     let {peerId, text} = options;
     if(!text.trim() && !options.suggestedPost?.changeMid) {
       return;
@@ -1503,7 +1505,7 @@ export class AppMessagesManager extends AppManager {
       confirmedPaymentResult: options.confirmedPaymentResult
     });
 
-    const promises: ReturnType<AppMessagesManager['sendText']>[] = [message.promise];
+    const promises: Promise<void | number>[] = [message.promise];
     let partOffset = splitted[0].length;
     for(let i = 1; i < splitted.length; ++i) {
       promises.push(this.sendText({
@@ -1513,6 +1515,11 @@ export class AppMessagesManager extends AppManager {
         entities: originalEntities?.length ? sliceMessageEntities(originalEntities, partOffset, splitted[i].length) : undefined
       }));
       partOffset += splitted[i].length;
+    }
+
+    if(options.returnTempId) {
+      Promise.all(promises).catch(noop);
+      return message.mid;
     }
 
     return Promise.all(promises).then(noop);
@@ -1882,12 +1889,14 @@ export class AppMessagesManager extends AppManager {
     }
 
     const ret: {
+      tempId: number,
       message: typeof message,
       promise: typeof sentDeferred,
       send: typeof upload,
       media: typeof media,
       uploadingFileName: typeof uploadingFileName
     } = {
+      tempId: message.mid,
       message,
       media,
       uploadingFileName
@@ -2151,7 +2160,8 @@ export class AppMessagesManager extends AppManager {
     await this.checkSendOptions(options);
 
     if(options.sendFileDetails.length === 1) {
-      return this.sendFile({...options, ...options.sendFileDetails[0]});
+      const result = await this.sendFile({...options, ...options.sendFileDetails[0]});
+      return options.returnTempIds ? [result.tempId] : result;
     }
 
     let {peerId} = options;
@@ -2214,6 +2224,7 @@ export class AppMessagesManager extends AppManager {
       return result;
     });
     const results = await Promise.all(_results);
+    const tempIds = results.map(({tempId}) => tempId);
 
     if(options.stars) {
       const message = results[0].message;
@@ -2369,7 +2380,7 @@ export class AppMessagesManager extends AppManager {
       return inputSingleMedia;
     });
 
-    return Promise.all(promises).then((inputs) => {
+    const sendPromise = Promise.all(promises).then((inputs) => {
       inputs = inputs.filter(Boolean);
 
       if(options.stars) {
@@ -2393,6 +2404,13 @@ export class AppMessagesManager extends AppManager {
       }
       return invoke(inputs);
     });
+
+    if(options.returnTempIds) {
+      sendPromise.catch(noop);
+      return tempIds;
+    }
+
+    return sendPromise;
   }
 
   public sendContact({peerId, contactPeerId, monoforumThreadId, confirmedPaymentResult}: SendContactArgs) {
@@ -2650,6 +2668,10 @@ export class AppMessagesManager extends AppManager {
     });
 
     const promise = message.promise;
+    if(options.returnTempId) {
+      promise.catch(noop);
+      return message.mid;
+    }
     return promise;
   }
 
@@ -3315,6 +3337,21 @@ export class AppMessagesManager extends AppManager {
     this.dialogsStorage.generateIndexForDialog(dialog, false, message);
 
     this.scheduleHandleNewDialogs(message.peerId, dialog);
+  }
+
+  public cancelPendingMessageByTempId(tempId: number) {
+    const randomId = Object.keys(this.pendingByRandomId).find((randomId) => {
+      return this.pendingByRandomId[randomId].tempId === tempId;
+    });
+    if(!randomId) return false;
+
+    const pendingData = this.pendingByRandomId[randomId];
+    const message = this.getMessageFromStorage(pendingData.storage, tempId);
+    if(message?._ === 'message' && message.uploadingFileName) {
+      const uploadingFileNames = Array.isArray(message.uploadingFileName) ? message.uploadingFileName : [message.uploadingFileName];
+      uploadingFileNames.forEach((fileName) => this.apiFileManager.cancelDownload(fileName));
+    }
+    return this.cancelPendingMessage(randomId);
   }
 
   public cancelPendingMessage(randomId: string) {
