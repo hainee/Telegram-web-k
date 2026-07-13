@@ -122,6 +122,10 @@ export default class ThumbsStorage extends AppManager {
       return;
     }
 
+    if(!(blob instanceof Blob)) {
+      return;
+    }
+
     const cache = this.stickerCachedThumbs[key] = {
       url: URL.createObjectURL(blob),
       w: width,

@@ -105,7 +105,7 @@ export default class DialogsPlaceholder {
     this.availableLength = availableLength;
     this.detachTime = Date.now();
 
-    if(!liteMode.isAvailable('animations')) {
+    if(document.hidden || !liteMode.isAvailable('animations')) {
       this.remove();
     }
   }
@@ -121,11 +121,11 @@ export default class DialogsPlaceholder {
 
     if(this.canvas.parentElement) {
       this.canvas.remove();
+    }
 
-      if(this.blockScrollable) {
-        this.blockScrollable.container.style.overflowY = '';
-        this.blockScrollable = undefined;
-      }
+    if(this.blockScrollable) {
+      this.blockScrollable.container.style.overflowY = '';
+      this.blockScrollable = undefined;
     }
 
     this.onRemove?.();
@@ -152,7 +152,7 @@ export default class DialogsPlaceholder {
 
     if(!detachTime) {
       return;
-    } else if(!liteMode.isAvailable('animations')) {
+    } else if(document.hidden || !liteMode.isAvailable('animations')) {
       this.remove();
       return;
     }

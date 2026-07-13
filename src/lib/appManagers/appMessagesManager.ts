@@ -1303,6 +1303,8 @@ export class AppMessagesManager extends AppManager {
       }>
     }>
   ): Promise<void | number> {
+    delete (options as any).tempId;
+    delete (options as any).tempIds;
     let {peerId, text} = options;
     if(!text.trim() && !options.suggestedPost?.changeMid) {
       return;
@@ -1526,6 +1528,8 @@ export class AppMessagesManager extends AppManager {
   }
 
   public async sendFile(options: SendFileArgs) {
+    delete (options as any).tempId;
+    delete (options as any).tempIds;
     if(options.stars && options.isAnimated) {
       // * paid media can only contain photos and plain videos, the server rejects
       // * animated documents with EXTENDED_MEDIA_TYPE_INVALID — send the GIF as a silent video
@@ -1553,7 +1557,7 @@ export class AppMessagesManager extends AppManager {
       [caption, entities] = parseMarkdown(caption, entities);
     }
 
-    const mediaTempId = options.useTempMediaId ? this.mediaTempId++ : message.id;
+    const mediaTempId = this.mediaTempId++;
 
     const documentAndMeta = this.makeDocumentAndMetaForSendingFile({
       mediaTempId,
@@ -2157,6 +2161,8 @@ export class AppMessagesManager extends AppManager {
     clearDraft?: boolean,
     stars?: number
   }) {
+    delete (options as any).tempId;
+    delete (options as any).tempIds;
     await this.checkSendOptions(options);
 
     if(options.sendFileDetails.length === 1) {
@@ -2363,10 +2369,23 @@ export class AppMessagesManager extends AppManager {
         inputMedia[property] = originalInputMedia[property] ?? inputMedia[property];
       });
 
+      const randomId = message?.random_id;
+      // Defensive: random_id must be a string (from randomLong()), not a float tempId
+      const invalid = !randomId || String(randomId).includes('.');
+      if(invalid) {
+        console.error('[sendGrouped] invalid random_id!', {
+          randomId,
+          type: typeof randomId,
+          messageMid: message?.mid,
+          messageId: message?.id,
+          messageKeys: message ? Object.keys(message).slice(0, 20) : 'message is undefined'
+        }, new Error().stack);
+        this.log.error('sendGrouped: invalid random_id, generating new one', randomId, message?.id);
+      }
       const inputSingleMedia: InputSingleMedia = {
         _: 'inputSingleMedia',
         media: inputMedia,
-        random_id: message?.random_id,
+        random_id: invalid ? randomLong() : randomId,
         message: caption,
         entities: sendEntities
       };

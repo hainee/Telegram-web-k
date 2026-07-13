@@ -218,7 +218,14 @@ export default defineConfig({
     // cssCodeSplit: true
   },
   worker: {
-    format: 'es'
+    format: 'es',
+    rollupOptions: {
+      output: {
+        entryFileNames: NO_HASH ? '[name].js' : undefined,
+        chunkFileNames: NO_HASH ? '[name].js' : undefined,
+        assetFileNames: NO_HASH ? '[name][extname]' : undefined
+      }
+    }
   },
   css: {
     devSourcemap: true,

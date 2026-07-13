@@ -143,6 +143,11 @@ class TLSerialization {
    * @param sLong should be big-endian
    */
   public storeLong(sLong: Array<number> | string | number, field?: string) {
+    // If a float tempId leaks into a long field, crash with location info
+    // to help locate the root cause. Fix where the value is SET, not here.
+    if(typeof sLong === 'number' && sLong % 1 !== 0) {
+      throw new Error(`[TL] Non-integer value "${sLong}" passed to long field "${field}". This is likely a tempId leak.`);
+    }
     if(Array.isArray(sLong)) {
       if(sLong.length === 2) {
         return this.storeLongP(sLong[0], sLong[1], field);

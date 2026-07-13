@@ -71,17 +71,6 @@ const DEBUG_MANAGER_REQUESTS: {[managerName: string]: Set<string>} = {
   // appMessagesManager: new Set(['getMessageByPeer', 'getGroupsFirstMessage'])
 };
 
-function cloneArgsWithoutSendCallbacks(args: any[]) {
-  const clonedArgs = [...args];
-  const params = clonedArgs[0];
-  if(params && typeof params === 'object') {
-    clonedArgs[0] = {...params};
-    delete clonedArgs[0].onSendSuccess;
-    delete clonedArgs[0].onSendError;
-  }
-  return clonedArgs;
-}
-
 function createProxy(
   /* source: T,  */
   name: string,
@@ -102,11 +91,10 @@ function createProxy(
       // }
 
       return (...args: any[]) => {
-        const clonedArgs = cloneArgsWithoutSendCallbacks(args);
         const promise = apiManagerProxy.invoke('manager', {
           name,
           method: p as string,
-          args: clonedArgs,
+          args,
           accountNumber
         }, ack as any);
         const params = args[0];

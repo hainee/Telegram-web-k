@@ -75,9 +75,7 @@ export const createDeferredSortedVirtualList = <T, >(args: CreateDeferredSortedV
 
     const realItems = [...pinnedItems(), ...sortedItems()];
 
-    return new Array(Math.max(totalCount() + pinnedItems().length, realItems.length))
-    .fill(null)
-    .map((_, idx) => realItems[idx] || null);
+    return realItems;
   });
 
   const itemsLength = createMemo(() => items().length);

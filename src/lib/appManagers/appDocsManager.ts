@@ -80,7 +80,7 @@ export class AppDocsManager extends AppManager {
   };
 
   public saveDoc(doc: Document, context?: ReferenceContext, altDocuments?: Document[]): MyDocument {
-    if(!doc || doc._ === 'documentEmpty') {
+    if(!doc || doc._ === 'documentEmpty' || doc.id === undefined) {
       return;
     }
 
