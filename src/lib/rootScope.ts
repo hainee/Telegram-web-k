@@ -46,9 +46,9 @@ export type BroadcastEvents = {
   'peer_pinned_messages': {peerId: PeerId, mids?: number[], pinned?: boolean, unpinAll?: true},
   'peer_pinned_hidden': {peerId: PeerId, maxId: number},
   'peer_typings': {peerId: PeerId, threadId?: number, typings: UserTyping[]},
-  'peer_block': {peerId: PeerId, blocked?: boolean, blockedMyStoriesFrom?: boolean},
+  'peer_block': {peerId: PeerId, blocked?: boolean, blockedMyStoriesFrom?: boolean, fromMe?: boolean},
   'peer_title_edit': {peerId: PeerId, threadId?: number},
-  'peer_deleted': PeerId, // left chat, deleted user dialog, left channel
+  'peer_deleted': {peerId: PeerId, fromMe?: boolean}, // left chat, deleted user dialog, left channel
   'peer_full_update': PeerId,
   'open_chat': {peerId: PeerId},
   'peer_settings': {peerId: PeerId, settings: PeerSettings},
@@ -79,7 +79,7 @@ export type BroadcastEvents = {
   'history_reply_markup': {peerId: PeerId},
   'history_multiappend': MyMessage,
   // 'history_delete': {peerId: PeerId, msgs: Map<number, {savedPeerId?: PeerId}>},
-  'history_delete': {peerId: PeerId, msgs: Set<number>},
+  'history_delete': {peerId: PeerId, msgs: Set<number>, fromMe?: boolean},
   'history_forbidden': PeerId,
   'history_reload': PeerId,
   'history_delete_key': {historyKey: string, mid: number},

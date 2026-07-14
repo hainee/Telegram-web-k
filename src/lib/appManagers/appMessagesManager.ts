@@ -4775,7 +4775,7 @@ export class AppMessagesManager extends AppManager {
           }
         }
 
-        this.dialogsStorage.dropDialogOnDeletion(peerId, threadOrSavedId);
+        this.dialogsStorage.dropDialogOnDeletion(peerId, threadOrSavedId, true);
       }
     });
   }
@@ -8338,7 +8338,7 @@ export class AppMessagesManager extends AppManager {
       }
     });
 
-    this.rootScope.dispatchEvent('history_delete', {peerId, msgs: historyUpdated.msgs});
+    this.rootScope.dispatchEvent('history_delete', {peerId, msgs: historyUpdated.msgs, fromMe: !!(update as any).fromMe});
 
     const dialogs: AnyDialog[] = [
       ...virtual.values()

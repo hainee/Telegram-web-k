@@ -69,7 +69,7 @@ export class AppUsersManager extends AppManager {
 
     this.rootScope.addEventListener('state_synchronized', this.updateUsersStatuses);
 
-    this.rootScope.addEventListener('peer_deleted', (peerId) => {
+    this.rootScope.addEventListener('peer_deleted', ({peerId}) => {
       this.appStateManager.getState().then((state) => {
         const recentSearch = state.recentSearch;
         if(!recentSearch) return;

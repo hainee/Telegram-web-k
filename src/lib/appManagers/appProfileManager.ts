@@ -1263,7 +1263,8 @@ export class AppProfileManager extends AppManager {
     this.rootScope.dispatchEvent('peer_block', {
       peerId,
       blocked: update.pFlags.blocked,
-      blockedMyStoriesFrom: update.pFlags.blocked_my_stories_from
+      blockedMyStoriesFrom: update.pFlags.blocked_my_stories_from,
+      fromMe: !!(update as any).fromMe
     });
   };
 

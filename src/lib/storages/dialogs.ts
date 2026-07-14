@@ -1156,7 +1156,7 @@ export default class DialogsStorage extends AppManager {
   /**
    * leaving chat, leaving channel, deleting private dialog
    */
-  public dropDialogOnDeletion(peerId: PeerId, topicOrSavedId?: number) {
+  public dropDialogOnDeletion(peerId: PeerId, topicOrSavedId?: number, fromMe = false) {
     this.dropDialogWithEvent(peerId, topicOrSavedId);
 
     // * drop 'you joined this channel' service message
@@ -1175,7 +1175,7 @@ export default class DialogsStorage extends AppManager {
       }
     }
 
-    this.rootScope.dispatchEvent('peer_deleted', peerId);
+    this.rootScope.dispatchEvent('peer_deleted', {peerId, fromMe});
   }
 
   public applyDialogs(

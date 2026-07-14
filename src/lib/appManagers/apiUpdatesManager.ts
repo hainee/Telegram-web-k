@@ -167,6 +167,7 @@ class ApiUpdatesManager {
   }
 
   public processLocalUpdate(update: Update) {
+    (update as any).fromMe = true;
     this.processUpdateMessage({
       _: 'updateShort',
       update
