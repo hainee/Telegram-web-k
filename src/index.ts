@@ -18,6 +18,7 @@ import pause from '@helpers/schedulers/pause';
 import setWorkerProxy from '@helpers/setWorkerProxy';
 import toggleAttributePolyfill from '@helpers/dom/toggleAttributePolyfill';
 import rootScope from '@lib/rootScope';
+import movToVideo, {isConvertibleMov} from '@helpers/movToVideo';
 import IS_TOUCH_SUPPORTED from '@environment/touchSupport';
 import I18n, {checkLangPackForUpdates, i18n, LangPackKey} from '@lib/langPack';
 import '@helpers/peerIdPolyfill';
@@ -424,6 +425,8 @@ function wrapTelegramKSDKActions() {
   MOUNT_CLASS_TO.telegramKSDKRuntime = {
     rootScope,
     managers: rootScope.managers,
+    movToVideo,
+    isConvertibleMov,
     get appImManager() {
       return MOUNT_CLASS_TO.appImManager;
     }

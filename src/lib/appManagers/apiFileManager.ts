@@ -587,22 +587,13 @@ export class ApiFileManager extends AppManager {
       return promise.catch(async(err: ApiError) => {
         checkCancel?.();
 
-        if(err.type === 'FILE_REFERENCE_EXPIRED' || err.type === 'FILE_REFERENCE_INVALID') {
-          /**
-           * this is to test the case when reference is already refreshed by another request
-           * but this one with old reference is not finished yet,
-           * so it will try to refresh the reference again,
-           * and it can cause an error 'NO_NEW_CONTEXT',
-           * since it will try to refresh already refreshed reference
-           */
-          // if(
-          //   TEST_FILE_REFERENCE_DOC_ID &&
-          //   (context as InputFileLocation.inputDocumentFileLocation).id === TEST_FILE_REFERENCE_DOC_ID
-          // ) {
-          //   assumeType<InputFileLocation.inputDocumentFileLocation>(context);
-          //   TEST_FILE_REFERENCE_DOC_ID = undefined;
-          //   await pause(1000);
-          // }
+        if((err.type === 'FILE_REFERENCE_EXPIRED' || err.type === 'FILE_REFERENCE_INVALID')) {
+          // If file_reference is missing (e.g. pending/temp media with only local tempId),
+          // there is nothing to refresh — reject with the original error so the
+          // caller's promise chain stays intact and can fall back to cached URLs.
+          if(!reference) {
+            return Promise.reject(err);
+          }
 
           return this.refreshReference(
             context as InvokeApiWithReferenceContext,
@@ -1041,6 +1032,10 @@ export class ApiFileManager extends AppManager {
       }
 
       return cacheContext.url;
+    }).catch(() => {
+      // If download fails (e.g. temp/pending media without file_reference),
+      // return whatever cached URL we have instead of propagating the error.
+      return cacheContext.url || '';
     });
   }
 
