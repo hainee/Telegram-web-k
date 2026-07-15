@@ -32,7 +32,7 @@ export class RLottieItem {
   private frameCount: number;
   private fps: number;
 
-  private dead: boolean;
+  public dead: boolean;
   // private context: OffscreenCanvasRenderingContext2D;
 
   private imageData: ImageData;
@@ -609,6 +609,7 @@ rlottieMessagePort.addMultipleEventsListeners({
 
   renderFrame: ({reqId, frameNo, clamped}) => {
     const item = items[reqId];
+    if(!item || item.dead) return null;
     return (item.offscreen ? item.renderOffscreen(frameNo) : item.render(frameNo, clamped)) as any;
   },
 
