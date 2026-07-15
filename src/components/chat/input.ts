@@ -2937,7 +2937,7 @@ export default class ChatInput {
   public passEventToInput(e: KeyboardEvent): void {
     if(!isSendShortcutPressed(e)) return void focusInput(this.messageInput, e);
 
-    this.sendMessage();
+    this.sendMessage(false, this.chat.peerId);
     getAppWindow().document.addEventListener('keyup', () => {
       focusInput(this.messageInput);
     }, {once: true});
@@ -2949,7 +2949,7 @@ export default class ChatInput {
 
       if(isSendShortcutPressed(e)) {
         cancelEvent(e);
-        this.sendMessage();
+        this.sendMessage(false, this.chat.peerId);
       } else if(e.ctrlKey || e.metaKey) {
         handleMarkdownShortcut(this.messageInput, e);
       } else if((key === 'PageUp' || key === 'PageDown') && !e.shiftKey) { // * fix pushing page to left (Chrome Windows)
@@ -4214,7 +4214,7 @@ export default class ChatInput {
     return {value, messageCount};
   }
 
-  public async sendMessage(force = false) {
+  public async sendMessage(force = false, capturedPeerId?: PeerId) {
     const {editMsgId, chat} = this;
     if(chat.type === ChatType.Scheduled && !force && !editMsgId) {
       this.scheduleSending();
@@ -4224,6 +4224,9 @@ export default class ChatInput {
     const {peerId} = chat;
     const {noWebPage} = this;
     const sendingParams = this.chat.getMessageSendingParams();
+    if(capturedPeerId != null && sendingParams.peerId !== capturedPeerId) {
+      sendingParams.peerId = capturedPeerId;
+    }
 
     if(!editMsgId) {
       const result = await ChatInput.sendMessageWithForward({

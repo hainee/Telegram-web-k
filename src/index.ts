@@ -429,6 +429,11 @@ function wrapTelegramKSDKActions() {
     isConvertibleMov,
     get appImManager() {
       return MOUNT_CLASS_TO.appImManager;
+    },
+    /** 清空当前聊天窗口的输入框文本内容 */
+    clearChatInput() {
+      const chat = MOUNT_CLASS_TO.appImManager?.chat;
+      chat?.input?.clearInput?.();
     }
   };
   setManifest();

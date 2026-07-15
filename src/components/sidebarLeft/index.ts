@@ -680,7 +680,9 @@ export class AppSidebarLeft extends SidebarSlider {
       createSubmenu: () => this.createNewChatsSubmenu()
     });
 
-    const menuButtons: (ButtonMenuItemOptions & {verify?: () => boolean | Promise<boolean>})[] = [{
+    /**
+     *
+     * {
       icon: 'plus',
       text: 'MultiAccount.AddAccount',
       onClick: this.addAccount,
@@ -688,7 +690,9 @@ export class AppSidebarLeft extends SidebarSlider {
         const totalAccounts = await AccountController.getTotalAccounts();
         return totalAccounts < MAX_ACCOUNTS;
       }
-    }, newSubmenu, {
+    },
+     */
+    const menuButtons: (ButtonMenuItemOptions & {verify?: () => boolean | Promise<boolean>})[] = [newSubmenu, {
       icon: 'savedmessages',
       text: 'SavedMessages',
       onClick: () => {
