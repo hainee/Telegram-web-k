@@ -8551,6 +8551,18 @@ export class AppMessagesManager extends AppManager {
       }
 
       this.resetPinnedMessagesCache(peerId, mids, pinned);
+
+      for(const mid of mids) {
+        const message = storage.get(mid) as Message.message;
+        if(message) {
+          this.rootScope.dispatchEvent('message_edit', {
+            storageKey: storage.key,
+            peerId,
+            mid,
+            message
+          });
+        }
+      }
     });
   };
 
