@@ -1144,10 +1144,11 @@ export default class DialogsStorage extends AppManager {
     this.storage.delete(peerId, keepLocal);
   }
 
-  public dropDialogWithEvent(peerId: PeerId, topicOrSavedId?: number) {
+  public dropDialogWithEvent(peerId: PeerId, topicOrSavedId?: number, fromMe = false) {
     const dropped = this.dropDialog(peerId, topicOrSavedId);
     if(dropped.length) {
       this.rootScope.dispatchEvent('dialog_drop', dropped[0]);
+      this.rootScope.dispatchEvent('peer_deleted', {peerId, fromMe});
     }
 
     return dropped;
@@ -1157,7 +1158,7 @@ export default class DialogsStorage extends AppManager {
    * leaving chat, leaving channel, deleting private dialog
    */
   public dropDialogOnDeletion(peerId: PeerId, topicOrSavedId?: number, fromMe = false) {
-    this.dropDialogWithEvent(peerId, topicOrSavedId);
+    this.dropDialogWithEvent(peerId, topicOrSavedId, fromMe);
 
     // * drop 'you joined this channel' service message
     if(this.appPeersManager.isBroadcast(peerId)) {
@@ -1174,8 +1175,6 @@ export default class DialogsStorage extends AppManager {
         });
       }
     }
-
-    this.rootScope.dispatchEvent('peer_deleted', {peerId, fromMe});
   }
 
   public applyDialogs(
@@ -1263,6 +1262,9 @@ export default class DialogsStorage extends AppManager {
         }
       } else {
         this.dropDialogWithEvent(peerId, dialogKey);
+        if(!peerId.isAnyChat() && this.appUsersManager.isDeleted(peerId.toUserId())) {
+          this.rootScope.dispatchEvent('peer_deleted', {peerId, fromMe: false});
+        }
       }
 
       const key = this.appMessagesManager.getUpdateAfterReloadKey(peerId, dialogKey);
