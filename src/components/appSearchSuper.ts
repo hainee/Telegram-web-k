@@ -1606,6 +1606,9 @@ export default class AppSearchSuper {
               }
 
               const participants = chatFull.participants as ChatParticipants.chatParticipants;
+              if(!participants?.participants) {
+                return;
+              }
               const processedPeerIds = new Set<PeerId>();
               for(const participant of participants.participants) {
                 const peerId = participant.user_id.toPeerId(false);

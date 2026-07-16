@@ -1313,12 +1313,12 @@ export default class DialogsStorage extends AppManager {
     if(peerId.isAnyChat()) {
       const chat: Chat = this.appChatsManager.getChat(peerId.toChatId());
       // ! chatForbidden stays for chat where you're kicked
+      const pFlags = (chat as Chat.chat).pFlags ?? (chat as any).pFlags;
       if(
         chat._ === 'channelForbidden' ||
-        // (chat as Chat.chat).pFlags.deactivated || // ! deactivated means migrated, must save them
-        // || chat._ === 'chatForbidden'
-        (chat as Chat.chat).pFlags.left
-        // || (chat as any).pFlags.kicked
+        // * deactivated + no migrated_to = group deleted (not upgraded)
+        (pFlags?.deactivated && !(chat as any).migrated_to) ||
+        pFlags?.left
       ) {
         return false;
       }
