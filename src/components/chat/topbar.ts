@@ -92,6 +92,7 @@ export default class ChatTopbar {
   private btnGroupCallMenu: HTMLElement;
   private btnSearch: HTMLButtonElement;
   private btnLogFilters: HTMLButtonElement;
+  private btnRefresh: HTMLButtonElement;
   private btnMore: HTMLElement;
 
   private autoDeleteBtnMenuOptions: ButtonMenuItemOptionsVerifiable;
@@ -215,6 +216,7 @@ export default class ChatTopbar {
       this.btnGroupCallMenu,
       this.btnSearch,
       this.btnLogFilters,
+      this.btnRefresh,
       this.btnMore
     ].filter(Boolean));
 
@@ -937,6 +939,26 @@ export default class ChatTopbar {
     });
     this.attachClickEvent(this.btnCall, this.onCallClick.bind(this, 'voice'));
     this.attachClickEvent(this.btnGroupCall, this.onJoinGroupCallClick);
+
+    this.btnRefresh = ButtonIcon('rotate_left chat-topbar-refresh', {noRipple: true});
+
+    this.attachClickEvent(this.btnRefresh, () => {
+      if(this.btnRefresh.classList.contains('spinning')) return;
+      this.btnRefresh.classList.add('spinning');
+      this.btnRefresh.setAttribute('disabled', 'true');
+
+      const finish = () => {
+        this.btnRefresh.classList.remove('spinning');
+        this.btnRefresh.removeAttribute('disabled');
+        rootScope.dispatchEvent('message_refreshed' as any);
+      };
+
+      // Fire-and-forget: the return CancellablePromise cannot serialize
+      // across the proxy-worker boundary. Use timeout as visual feedback.
+      const {peerId, threadId} = this.chat;
+      this.managers.appMessagesManager.reloadConversationOrTopic(peerId, threadId);
+      setTimeout(finish, 3000);
+    });
 
     this.listenerSetter.add(rootScope)('folder_unread', (folder) => {
       if(!this.btnBackBadge || folder.id !== FOLDER_ID_ALL) {

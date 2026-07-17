@@ -153,6 +153,37 @@ export class AppSidebarLeft extends SidebarSlider {
     const sidebarHeader = this.sidebarEl.querySelector('.item-main .sidebar-header');
     sidebarHeader.append(this.inputSearch.container);
 
+    // Refresh button for syncing contacts from server
+    const refreshContactsBtn = ButtonIcon('rotate_left sidebar-header-refresh', {noRipple: true});
+    sidebarHeader.append(refreshContactsBtn);
+    refreshContactsBtn.setAttribute('disabled', 'true'); // 默认不可用
+
+    attachClickEvent(refreshContactsBtn, () => {
+      if(refreshContactsBtn.classList.contains('spinning')) return;
+      refreshContactsBtn.classList.add('spinning');
+      refreshContactsBtn.setAttribute('disabled', 'true');
+
+      const finish = () => {
+        refreshContactsBtn.classList.remove('spinning');
+        refreshContactsBtn.removeAttribute('disabled');
+        rootScope.removeEventListener('contacts_update', onContactsUpdate);
+        rootScope.dispatchEvent('contacts_refreshed' as any);
+      };
+
+      // Fire-and-forget: the return value contains a CancellablePromise that
+      // cannot serialize across the proxy-worker boundary. Track completion
+      // via the contacts_update event instead.
+      this.managers.appUsersManager.forceFillContacts();
+
+      const timeout = setTimeout(finish, 5000);
+
+      const onContactsUpdate = () => {
+        clearTimeout(timeout);
+        finish();
+      };
+      rootScope.addEventListener('contacts_update', onContactsUpdate);
+    });
+
     this.backBtn = this.sidebarEl.querySelector('.sidebar-back-button') as HTMLButtonElement;
 
     this.toolsBtn = this.createToolsMenu();
@@ -322,7 +353,8 @@ export class AppSidebarLeft extends SidebarSlider {
       if(isUsingPasscode) sidebarHeader.append(lockButton.element);
       else lockButton.element.remove();
 
-      sidebarHeader.classList.toggle('is-input-the-last-child', !isPremium && !isUsingPasscode);
+      // Refresh button is always present, so input is never the last child
+      sidebarHeader.classList.remove('is-input-the-last-child');
     };
 
     appImManager.addEventListener('premium_toggle', onPremium);

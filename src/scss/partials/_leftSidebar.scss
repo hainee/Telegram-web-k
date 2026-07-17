@@ -56,6 +56,23 @@
     }
   }
 
+  @keyframes refresh-spin {
+    to { transform: rotate(-360deg); }
+  }
+
+  .btn-icon.sidebar-header-refresh {
+    margin-inline-start: auto;
+    flex-shrink: 0;
+
+    &.spinning {
+      opacity: 0.7;
+
+      .button-icon {
+        animation: refresh-spin 0.8s linear infinite;
+      }
+    }
+  }
+
   @include respond-to(no-floating-left-sidebar) {
     body.has-folders-sidebar & {
       .item-main {

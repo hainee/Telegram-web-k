@@ -44,6 +44,11 @@ type GetPaidMessagesRevenueArgs = {
   parentPeerId?: PeerId;
 };
 
+interface FillContactsResult {
+  cached: boolean;
+  promise: Promise<Set<UserId>>;
+}
+
 export class AppUsersManager extends AppManager {
   private storage: AppStoragesManager['storages']['users'];
 
@@ -304,7 +309,7 @@ export class AppUsersManager extends AppManager {
     });
   }
 
-  public fillContacts() {
+  public fillContacts(): FillContactsResult {
     if(this.contactsFillPromise && this.updatedContactsList) {
       return {
         cached: this.contactsFillPromise.isFulfilled,
@@ -339,6 +344,12 @@ export class AppUsersManager extends AppManager {
       cached: this.contactsFillPromise?.isFulfilled,
       promise: this.contactsFillPromise ||= promise
     };
+  }
+
+  public forceFillContacts(): FillContactsResult {
+    this.updatedContactsList = false;
+    this.contactsFillPromise = undefined;
+    return this.fillContacts();
   }
 
   public resolveUsername(username: string) {
