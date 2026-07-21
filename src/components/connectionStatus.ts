@@ -33,6 +33,27 @@ export default class ConnectionStatusComponent {
   private managers: AppManagers;
   private inputSearch: InputSearch;
   private rAF: number;
+  private dispatchingConnectionStatusChange = false;
+  private currentDcId: number;
+  private currentConnectionStatus: ConnectionStatus;
+
+  private dispatchConnectionStatusChange(status: ConnectionStatus, retryAt?: number, dcId: number = App.baseDcId) {
+    this.dispatchingConnectionStatusChange = true;
+    try {
+      rootScope.dispatchEvent('connection_status_change', {
+        _: 'networkerStatus',
+        status,
+        dcId,
+        name: 'NET-' + dcId,
+        isFileNetworker: false,
+        isFileDownload: false,
+        isFileUpload: false,
+        retryAt
+      });
+    } finally {
+      this.dispatchingConnectionStatusChange = false;
+    }
+  }
 
   public construct(
     managers: AppManagers,
@@ -45,6 +66,9 @@ export default class ConnectionStatusComponent {
     this.inputSearch.setPlaceholder('Search');
 
     rootScope.addEventListener('connection_status_change', (status) => {
+      if(this.dispatchingConnectionStatusChange) {
+        return;
+      }
       // console.log(status);
 
       this.setConnectionStatus();
@@ -52,6 +76,7 @@ export default class ConnectionStatusComponent {
 
     rootScope.addEventListener('state_synchronizing', () => {
       this.updating = true;
+      this.currentConnectionStatus = ConnectionStatus.Connecting;
       DEBUG && this.log('updating', this.updating);
       this.setState();
     });
@@ -59,6 +84,7 @@ export default class ConnectionStatusComponent {
     rootScope.addEventListener('state_synchronized', () => {
       DEBUG && this.log('state_synchronized');
       this.updating = false;
+      this.currentConnectionStatus = ConnectionStatus.Connected;
       DEBUG && this.log('updating', this.updating);
       this.setState();
     });
@@ -109,9 +135,12 @@ export default class ConnectionStatusComponent {
         this.hadConnect = true;
       }
 
-      this.timedOut = status && (overrideStatus ?? status.status) === ConnectionStatus.TimedOut;
+      const effectiveStatus = overrideStatus ?? status?.status ?? ConnectionStatus.Closed;
+      this.timedOut = status && effectiveStatus === ConnectionStatus.TimedOut;
       this.connecting = !online;
       this.retryAt = status && status.retryAt;
+      this.currentDcId = baseDcId;
+      this.currentConnectionStatus = effectiveStatus;
       DEBUG && this.log('connecting', this.connecting);
       this.setState();
     });
@@ -193,6 +222,11 @@ export default class ConnectionStatusComponent {
         setText();
         const isConnecting = this.connecting || this.updating;
         this.inputSearch.toggleLoading(isConnecting);
+        this.dispatchConnectionStatusChange(
+          isConnecting ? (this.currentConnectionStatus ?? ConnectionStatus.Connecting) : ConnectionStatus.Connected,
+          this.retryAt,
+          this.currentDcId
+        );
         this.setStateTimeout = 0;
         DEBUG && this.log('setState: isShown:', isConnecting);
       };
